@@ -20,6 +20,6 @@ public class Bananana {
     }
 
     private static void start() {
-        ApplicationStarter.run("Bananana?", new BanananaEnvironment());
+        ApplicationStarter.run("Bananana?!", new BanananaEnvironment());
     }
 }

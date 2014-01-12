@@ -23,7 +23,7 @@ class BanananaEnvironment extends Environment {
     private Grid grid;
     private int score = 0;
     private Snake snake;
-    private int speed = 5;
+    private int speed = 1;
     private int moveCounter = speed;
 
     public BanananaEnvironment() {
@@ -41,7 +41,7 @@ class BanananaEnvironment extends Environment {
         this.snake.getBody().add(new Point(5, 3));
         this.snake.getBody().add(new Point(4, 3));
 
-        this.grid.setColor(Color.BLACK);
+        this.grid.setColor(new Color (0, 0, 0, 0));
         this.grid.setColumns(42);
         this.grid.setRows(26);
         this.grid.setCellWidth(20);
