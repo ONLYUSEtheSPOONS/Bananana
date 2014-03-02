@@ -23,7 +23,7 @@ import java.util.ArrayList;
  */
 class BanananaEnvironment extends Environment {
 
-    private GameState gameState = GameState.PAUSED;
+    private GameState gameState = GameState.START;
     private Grid grid;
     private int score = 0;
     private Snake snake;
@@ -39,7 +39,12 @@ class BanananaEnvironment extends Environment {
     private Image apple1;
     private ArrayList<Point> poisonApples;
     private ArrayList<Point> wall;
-
+    
+    private double SNITCH_SLOW = .80;
+    private double SNITCH_MEDIUM = .67;
+    private double SNITCH_FAST = .55;
+    private double snitchSpeed = SNITCH_SLOW;
+    
     public BanananaEnvironment() {
     }
 
@@ -104,7 +109,9 @@ class BanananaEnvironment extends Environment {
 
     @Override
     public void timerTaskHandler() {
-        if (this.gameState == GameState.RUNNING) {
+        System.out.println("timer");
+        if (this.getGameState() == GameState.RUNNING) {
+            System.out.println("timer - running");
             if (snake != null) {
                 System.out.println("have snake");
                 if (delay <= 0) {
@@ -113,7 +120,7 @@ class BanananaEnvironment extends Environment {
                     moveBlackSnitch();
                     delay = defaultDelay;
                     if (snake.selfHitTest()) {
-                        this.gameState = GameState.ENDED;
+                        this.setGameState(GameState.ENDED);
                     }
                     checkSnakeAppleIntersection();
                     checkSnakeGoldenSnitchesIntersection();
@@ -138,11 +145,11 @@ class BanananaEnvironment extends Environment {
                 } else if (snake.getDirection() == Direction.UP) {
                     if (snake.getHead().y <= -1) {
                         snake.getHead().y = this.grid.getColumns() - 1;
-                        }
+                    }
                 } else if (snake.getDirection() == Direction.DOWN) {
                     if (snake.getHead().y >= this.grid.getColumns()) {
                         snake.getHead().y = 0;
-                    
+
                     }
                 }
             }
@@ -168,7 +175,7 @@ class BanananaEnvironment extends Environment {
     private void moveBlackSnitch() {
         for (int i = 0; i < blackSnitches.size(); i++) {
 
-            if (Math.random() > .67) {
+            if (Math.random() > snitchSpeed) {
 
                 if (snake.getHead().x > blackSnitches.get(i).x) {
                     blackSnitches.get(i).x++;
@@ -190,10 +197,10 @@ class BanananaEnvironment extends Environment {
     public void keyPressedHandler(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_SPACE) {
             //toggle the PAUSED/RUNNING state
-            if (gameState == GameState.RUNNING) {
-                gameState = GameState.PAUSED;
-            } else if (gameState == GameState.PAUSED) {
-                gameState = GameState.RUNNING;
+            if (getGameState() == GameState.RUNNING) {
+                setGameState(GameState.PAUSED);
+            } else if ((getGameState() == GameState.PAUSED) || (getGameState() == GameState.START)) {
+                setGameState(GameState.RUNNING);
             }
 
         } else if (e.getKeyCode() == KeyEvent.VK_Z) {
@@ -209,8 +216,14 @@ class BanananaEnvironment extends Environment {
         } else if (e.getKeyCode() == KeyEvent.VK_C) {
             snake.setGrowthCount(2);
         } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-            gameState = GameState.ENDED;
-        }
+            setGameState(GameState.ENDED);
+        } else if (e.getKeyCode() == KeyEvent.VK_1) {
+            snitchSpeed = SNITCH_SLOW;
+        } else if (e.getKeyCode() == KeyEvent.VK_2) {
+            snitchSpeed = SNITCH_MEDIUM;
+        } else if (e.getKeyCode() == KeyEvent.VK_3) {
+            snitchSpeed = SNITCH_FAST;
+        }        
     }
 
     @Override
@@ -223,49 +236,54 @@ class BanananaEnvironment extends Environment {
 
     @Override
     public void paintEnvironment(Graphics graphics) {
-        if (this.grid != null) {
-            this.grid.paintComponent(graphics);
+        if (this.getGameState() == GameState.START) {
+            
+        } else {
 
-            if (this.apples != null) {
-                for (int i = 0; i < this.apples.size(); i++) {
-                    GraphicsPalette.drawApple(graphics, this.grid.getCellPosition(this.apples.get(i)), this.grid.getCellSize());
+            if (this.grid != null) {
+                this.grid.paintComponent(graphics);
 
-                }
-            }
-            if (this.goldenSnitches != null) {
-                for (int i = 0; i < this.goldenSnitches.size(); i++) {
-                    graphics.drawImage(snitch, this.grid.getCellPosition(this.goldenSnitches.get(i)).x, this.grid.getCellPosition(this.goldenSnitches.get(i)).y, this.grid.getCellWidth(), this.grid.getCellHeight(), this);
-                }
-            }
-            if (this.poisonBottles != null) {
-                for (int i = 0; i < this.poisonBottles.size(); i++) {
-                    GraphicsPalette.drawPoisonBottle(graphics, this.grid.getCellPosition(this.poisonBottles.get(i)), this.grid.getCellSize(), Color.BLACK);
-                }
-            }
-            if (this.blackSnitches != null) {
-                for (int i = 0; i < this.blackSnitches.size(); i++) {
-                    graphics.drawImage(snitch1, this.grid.getCellPosition(this.blackSnitches.get(i)).x, this.grid.getCellPosition(this.blackSnitches.get(i)).y, this.grid.getCellWidth(), this.grid.getCellHeight(), this);
-                }
-            }
-            if (this.poisonApples != null) {
-                for (int i = 0; i < this.poisonApples.size(); i++) {
-                    graphics.drawImage(apple1, this.grid.getCellPosition(this.poisonApples.get(i)).x, this.grid.getCellPosition(this.poisonApples.get(i)).y, this.grid.getCellWidth(), this.grid.getCellHeight(), this);
-                }
-            }
+                if (this.apples != null) {
+                    for (int i = 0; i < this.apples.size(); i++) {
+                        GraphicsPalette.drawApple(graphics, this.grid.getCellPosition(this.apples.get(i)), this.grid.getCellSize());
 
-            if (this.wall != null) {
-                for (int i = 0; i < this.wall.size(); i++) {
-                    graphics.setColor(Color.RED);
-                    graphics.fill3DRect(this.grid.getCellPosition(this.wall.get(i)).x, this.grid.getCellPosition(this.wall.get(i)).y, this.grid.getCellWidth(), this.grid.getCellHeight(), true);
+                    }
+                }
+                if (this.goldenSnitches != null) {
+                    for (int i = 0; i < this.goldenSnitches.size(); i++) {
+                        graphics.drawImage(snitch, this.grid.getCellPosition(this.goldenSnitches.get(i)).x, this.grid.getCellPosition(this.goldenSnitches.get(i)).y, this.grid.getCellWidth(), this.grid.getCellHeight(), this);
+                    }
+                }
+                if (this.poisonBottles != null) {
+                    for (int i = 0; i < this.poisonBottles.size(); i++) {
+                        GraphicsPalette.drawPoisonBottle(graphics, this.grid.getCellPosition(this.poisonBottles.get(i)), this.grid.getCellSize(), Color.BLACK);
+                    }
+                }
+                if (this.blackSnitches != null) {
+                    for (int i = 0; i < this.blackSnitches.size(); i++) {
+                        graphics.drawImage(snitch1, this.grid.getCellPosition(this.blackSnitches.get(i)).x, this.grid.getCellPosition(this.blackSnitches.get(i)).y, this.grid.getCellWidth(), this.grid.getCellHeight(), this);
+                    }
+                }
+                if (this.poisonApples != null) {
+                    for (int i = 0; i < this.poisonApples.size(); i++) {
+                        graphics.drawImage(apple1, this.grid.getCellPosition(this.poisonApples.get(i)).x, this.grid.getCellPosition(this.poisonApples.get(i)).y, this.grid.getCellWidth(), this.grid.getCellHeight(), this);
+                    }
                 }
 
-            }
-            Point cellLocation;
-            graphics.setColor(Color.BLACK);
-            if (snake != null) {
-                for (int i = 0; i < snake.getBody().size(); i++) {
-                    cellLocation = grid.getCellPosition(snake.getBody().get(i));
-                    graphics.fillOval(cellLocation.x, cellLocation.y, grid.getCellWidth(), grid.getCellHeight());
+                if (this.wall != null) {
+                    for (int i = 0; i < this.wall.size(); i++) {
+                        graphics.setColor(Color.RED);
+                        graphics.fill3DRect(this.grid.getCellPosition(this.wall.get(i)).x, this.grid.getCellPosition(this.wall.get(i)).y, this.grid.getCellWidth(), this.grid.getCellHeight(), true);
+                    }
+
+                }
+                Point cellLocation;
+                graphics.setColor(Color.BLACK);
+                if (snake != null) {
+                    for (int i = 0; i < snake.getBody().size(); i++) {
+                        cellLocation = grid.getCellPosition(snake.getBody().get(i));
+                        graphics.fillOval(cellLocation.x, cellLocation.y, grid.getCellWidth(), grid.getCellHeight());
+                    }
                 }
             }
         }
@@ -276,7 +294,7 @@ class BanananaEnvironment extends Environment {
 
 
 
-        if (gameState == GameState.ENDED) {
+        if (getGameState() == GameState.ENDED) {
             graphics.setFont(new Font("Calibri", Font.ITALIC, 100));
             graphics.drawString("Game Over!!!", 175, 300);
         }
@@ -322,5 +340,20 @@ class BanananaEnvironment extends Environment {
 
             }
         }
+    }
+
+    /**
+     * @return the gameState
+     */
+    public GameState getGameState() {
+        return gameState;
+    }
+
+    /**
+     * @param gameState the gameState to set
+     */
+    public void setGameState(GameState gameState) {
+        this.gameState = gameState;
+        System.out.println("Game State change = " + gameState.toString());
     }
 }

@@ -9,6 +9,6 @@ package bananana;
  * @author doughill
  */
 public enum GameState {
-    RUNNING, PAUSED, ENDED, SNEEZED
+    START, RUNNING, PAUSED, ENDED
     
 }
