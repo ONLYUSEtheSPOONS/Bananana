@@ -15,6 +15,7 @@ import java.awt.Image;
 import java.awt.Point;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import static java.awt.image.ImageObserver.WIDTH;
 import java.util.ArrayList;
 
 /**
@@ -39,12 +40,11 @@ class BanananaEnvironment extends Environment {
     private Image apple1;
     private ArrayList<Point> poisonApples;
     private ArrayList<Point> wall;
-    
     private double SNITCH_SLOW = .80;
     private double SNITCH_MEDIUM = .67;
     private double SNITCH_FAST = .55;
     private double snitchSpeed = SNITCH_SLOW;
-    
+
     public BanananaEnvironment() {
     }
 
@@ -109,18 +109,17 @@ class BanananaEnvironment extends Environment {
 
     @Override
     public void timerTaskHandler() {
-        System.out.println("timer");
         if (this.getGameState() == GameState.RUNNING) {
-            System.out.println("timer - running");
             if (snake != null) {
-                System.out.println("have snake");
                 if (delay <= 0) {
-                    System.out.println("move");
                     snake.move();
                     moveBlackSnitch();
                     delay = defaultDelay;
                     if (snake.selfHitTest()) {
                         this.setGameState(GameState.ENDED);
+                        if (snake.equals(-100)) {
+                            this.setGameState(GameState.ENDED);
+                        }
                     }
                     checkSnakeAppleIntersection();
                     checkSnakeGoldenSnitchesIntersection();
@@ -148,7 +147,8 @@ class BanananaEnvironment extends Environment {
                     }
                 } else if (snake.getDirection() == Direction.DOWN) {
                     if (snake.getHead().y >= this.grid.getColumns()) {
-                        snake.getHead().y = 0;
+                        snake.getHead().y = -1;
+
 
                     }
                 }
@@ -158,15 +158,30 @@ class BanananaEnvironment extends Environment {
 
     private void moveGoldenSnitch() {
         for (Point location : goldenSnitches) {
-            if (Math.random() > .9) {
+            if (Math.random() > .5) {
                 location.x += 1;
+                
+                if (location.x >= this.grid.getColumns()) {
+                    location.x = this.grid.getColumns() - 1;
+                }
+
             } else {
                 location.x -= 1;
+                if (location.x < 0) {
+                    location.x = 0;
+                }
             }
-            if (Math.random() > .9) {
+            if (Math.random() > .5) {
                 location.y += 1;
+                if (location.y >= this.grid.getRows()) {
+                    location.y = this.grid.getRows() - 1;
+                }
             } else {
                 location.y -= 1;
+                if (location.y < 0) {
+                    location.y = 0;
+
+                }
                 this.defaultDelay = -40;
             }
         }
@@ -202,7 +217,6 @@ class BanananaEnvironment extends Environment {
             } else if ((getGameState() == GameState.PAUSED) || (getGameState() == GameState.START)) {
                 setGameState(GameState.RUNNING);
             }
-
         } else if (e.getKeyCode() == KeyEvent.VK_Z) {
             snake.move();
         } else if (e.getKeyCode() == KeyEvent.VK_UP) {
@@ -214,16 +228,19 @@ class BanananaEnvironment extends Environment {
         } else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
             snake.setDirection(Direction.RIGHT);
         } else if (e.getKeyCode() == KeyEvent.VK_C) {
-            snake.setGrowthCount(2);
+            snake.setGrowthCount(0);
         } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
             setGameState(GameState.ENDED);
         } else if (e.getKeyCode() == KeyEvent.VK_1) {
             snitchSpeed = SNITCH_SLOW;
+            System.out.println("SLOW");
         } else if (e.getKeyCode() == KeyEvent.VK_2) {
             snitchSpeed = SNITCH_MEDIUM;
+            System.out.println("MED");
         } else if (e.getKeyCode() == KeyEvent.VK_3) {
             snitchSpeed = SNITCH_FAST;
-        }        
+            System.out.println("Fast");//efiuefiuenhfewnfewnfewnfjkewnfjkewf
+        }
     }
 
     @Override
@@ -237,7 +254,6 @@ class BanananaEnvironment extends Environment {
     @Override
     public void paintEnvironment(Graphics graphics) {
         if (this.getGameState() == GameState.START) {
-            
         } else {
 
             if (this.grid != null) {
@@ -275,8 +291,8 @@ class BanananaEnvironment extends Environment {
                         graphics.setColor(Color.RED);
                         graphics.fill3DRect(this.grid.getCellPosition(this.wall.get(i)).x, this.grid.getCellPosition(this.wall.get(i)).y, this.grid.getCellWidth(), this.grid.getCellHeight(), true);
                     }
-
                 }
+
                 Point cellLocation;
                 graphics.setColor(Color.BLACK);
                 if (snake != null) {
@@ -287,16 +303,41 @@ class BanananaEnvironment extends Environment {
                 }
             }
         }
-        graphics.setFont(new Font("Calibri", Font.ITALIC, 50));
-        graphics.setColor(Color.MAGENTA);
-        graphics.drawString("SCORE:" + this.score, 50, 50);
 
+        if (getGameState() == GameState.RUNNING) {
+            graphics.setFont(new Font("Calibri", Font.ITALIC, 50));
+            graphics.setColor(Color.GREEN);
+            graphics.drawString("SCORE:" + this.score, 50, 50);
+        }
 
-
-
-        if (getGameState() == GameState.ENDED) {
+        graphics.setColor(Color.white);
+        if (getGameState() == GameState.START) {
             graphics.setFont(new Font("Calibri", Font.ITALIC, 100));
-            graphics.drawString("Game Over!!!", 175, 300);
+            graphics.drawString("Press Space to Start", 20, 300);
+            graphics.setFont(new Font("Calibri", Font.ITALIC, 50));
+            graphics.setColor(Color.red);
+            graphics.drawString("Press 1 - Easy", 100, 400);
+            graphics.drawString("Press 2 - Medium", 100, 450);
+            graphics.drawString("Press 3 - Hard", 100, 500);
+        }
+        {
+
+            if (getGameState() == GameState.ENDED) {
+                graphics.setColor(Color.BLUE);
+                graphics.setFont(new Font("Calibri", Font.ITALIC, 100));
+                graphics.drawString("Game Over!!!", 175, 300);
+                {
+                    if (getGameState() == GameState.ENDED) {
+                        graphics.setColor(Color.MAGENTA);
+                        graphics.setFont(new Font("Calibri", Font.ITALIC, 100));
+                        graphics.drawString("FINAL SCORE:" + this.score, 110, 400);
+
+                    }
+
+
+                }
+            }
+
         }
     }
 
